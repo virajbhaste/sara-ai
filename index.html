@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SARA AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body {
+      background: radial-gradient(circle at top, #0f1b38 0%, #050814 70%);
+      color: #eef4ff;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(10, 16, 35, 0.75);
+      border-bottom: 1px solid rgba(0, 229, 255, 0.18);
+      backdrop-filter: blur(10px);
+    }
+    .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 18px; letter-spacing: 0.5px; color: #5ce1e6; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #00ff9d; box-shadow: 0 0 10px #00ff9d; }
+    .top-actions { display: flex; gap: 8px; }
+    .icon-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(92, 225, 230, 0.28);
+      color: #fff;
+      padding: 7px 11px;
+      border-radius: 12px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .icon-btn.active { background: #00c4cc; color: #04101d; font-weight: 700; border-color: #5ce1e6; }
+
+    .controls-bar {
+      display: flex;
+      gap: 8px;
+      padding: 8px 14px;
+      overflow-x: auto;
+      background: rgba(5, 10, 24, 0.6);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .controls-bar select, .chip {
+      background: rgba(255,255,255,0.08);
+      color: #e6f2ff;
+      border: 1px solid rgba(92, 225, 230, 0.25);
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 12px;
+      white-space: nowrap;
+      outline: none;
+    }
+    .controls-bar select option { background: #0b132b; color: #fff; }
+    .chip.on { background: rgba(0, 255, 157, 0.2); border-color: #00ff9d; color: #7dffcb; font-weight: 600; }
+
+    /* Holographic Avatar Area (Phase 2 madhe ithe 3D model yeil) */
+    .avatar-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 12px 10px;
+      flex-shrink: 0;
+    }
+    .orb-wrap {
+      position: relative;
+      width: 118px;
+      height: 118px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .orb-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(92, 225, 230, 0.45);
+      box-shadow: 0 0 25px rgba(0, 229, 255, 0.35), inset 0 0 25px rgba(0, 229, 255, 0.25);
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+    .orb-core {
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #9bf6ff, #00a8e8 55%, #3a0ca3 100%);
+      box-shadow: 0 0 32px rgba(0, 212, 255, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      transition: transform 0.2s ease;
+    }
+    .orb-wrap.listening .orb-ring { border-color: #00ff9d; box-shadow: 0 0 35px rgba(0, 255, 157, 0.65); animation: pulse 1.1s infinite; }
+    .orb-wrap.speaking .orb-core { animation: talk 0.45s infinite alternate; background: radial-gradient(circle at 35% 30%, #ffd6ff, #c77dff 55%, #480ca8 100%); }
+    .orb-wrap.thinking .orb-ring { border-color: #ffb703; animation: spin 1.5s linear infinite; border-style: dashed; }
+
+    @keyframes pulse { 0% { transform: scale(0.95); opacity: 0.7; } 50% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.7; } }
+    @keyframes talk { from { transform: scale(0.96); } to { transform: scale(1.09); } }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    .status-text { margin-top: 10px; font-size: 13px; color: #8ecae6; min-height: 18px; text-align: center; }
+
+    /* Chat Area */
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .msg {
+      max-width: 84%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.45;
+      word-wrap: break-word;
+    }
+    .msg.user { align-self: flex-end; background: linear-gradient(135deg, #0077b6, #0096c7); color: #fff; border-bottom-right-radius: 4px; }
+    .msg.sara { align-self: flex-start; background: rgba(255,255,255,0.09); border: 1px solid rgba(92, 225, 230, 0.22); color: #f1f7ff; border-bottom-left-radius: 4px; }
+    .msg.system { align-self: center; font-size: 12px; color: #ffd166; background: rgba(255, 209, 102, 0.12); border: 1px solid rgba(255, 209, 102, 0.3); text-align: center; }
+
+    /* Bottom Controls */
+    .footer {
+      padding: 10px 12px 14px;
+      background: rgba(8, 13, 28, 0.92);
+      border-top: 1px solid rgba(92, 225, 230, 0.16);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #textInput {
+      flex: 1;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 24px;
+      padding: 11px 15px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+    }
+    .send-btn, .mic-btn {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-size: 19px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .send-btn { background: rgba(92, 225, 230, 0.2); color: #5ce1e6; }
+    .mic-btn { background: linear-gradient(135deg, #00c4cc, #0077ff); color: #fff; box-shadow: 0 0 18px rgba(0, 196, 204, 0.5); }
+    .mic-btn.listening { background: linear-gradient(135deg, #ff4d6d, #d90429); box-shadow: 0 0 22px rgba(255, 77, 109, 0.75); }
+
+    /* Settings Modal */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.78);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 99;
+    }
+    .modal-bg.open { display: flex; }
+    .modal {
+      width: 100%;
+      max-width: 420px;
+      background: #0d1630;
+      border: 1px solid rgba(92, 225, 230, 0.35);
+      border-radius: 18px;
+      padding: 18px;
+      max-height: 88dvh;
+      overflow-y: auto;
+    }
+    .modal h2 { font-size: 18px; color: #5ce1e6; margin-bottom: 12px; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 12px; color: #a9c6e8; margin-bottom: 5px; }
+    .field input, .field textarea, .field select {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 10px;
+      padding: 10px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+    }
+    .modal-btns { display: flex; gap: 8px; margin-top: 14px; }
+    .btn-primary { flex: 1; background: #00c4cc; color: #04101d; border: none; padding: 11px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+    .btn-danger { background: rgba(255, 77, 109, 0.2); color: #ff758f; border: 1px solid rgba(255, 77, 109, 0.4); padding: 11px 14px; border-radius: 12px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand"><span class="dot"></span> SARA AI</div>
+    <div class="top-actions">
+      <button id="stopSpeakBtn" class="icon-btn" title="Bolna Thambav">🔇 Mute</button>
+      <button id="settingsBtn" class="icon-btn">⚙️ Setup</button>
+    </div>
+  </header>
+
+  <div class="controls-bar">
+    <select id="langSelect">
+      <option value="mr-IN">🇮🇳 मराठी (Marathi)</option>
+      <option value="hi-IN">🇮🇳 हिंदी (Hindi)</option>
+      <option value="en-IN">🇬🇧 English (India)</option>
+    </select>
+    <button id="handsFreeBtn" class="chip">🎧 Hands-Free: OFF</button>
+    <button id="tutorBtn" class="chip">🎓 English Tutor: OFF</button>
+  </div>
+
+  <div class="avatar-stage">
+    <div id="orbWrap" class="orb-wrap">
+      <div class="orb-ring"></div>
+      <div id="orbCore" class="orb-core">✨</div>
+    </div>
+    <div id="statusText" class="status-text">Mic dabun bol kiva khali type kar</div>
+  </div>
+
+  <div id="chat"></div>
+
+  <div class="footer">
+    <input id="textInput" type="text" placeholder="SARA la kahi pan vichar..." autocomplete="off" />
+    <button id="sendBtn" class="send-btn">➤</button>
+    <button id="micBtn" class="mic-btn">🎤</button>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal-bg">
+    <div class="modal">
+      <h2>⚙️ SARA AI Settings</h2>
+      <div class="field">
+        <label>Gemini Free API Key (Fakta tuzhya phone madhe safe rahil)</label>
+        <input id="apiKeyInput" type="password" placeholder="Tuzhi API key ithe paste kar..." />
+      </div>
+      <div class="field">
+        <label>Tuzha Naav (SARA tula ya navane hak marel)</label>
+        <input id="userNameInput" type="text" placeholder="e.g. Viraj" />
+      </div>
+      <div class="field">
+        <label>SARA chi Memory (Tuzhya aavdi / mahiti ji tila lakshat thevaychi)</label>
+        <textarea id="memoryInput" rows="3" placeholder="e.g. Mala gym aavadte, trekking aavadte, mala English shikaychi aahe..."></textarea>
+      </div>
+      <div class="field">
+        <label>Gemini Model</label>
+        <select id="modelSelect">
+          <option value="gemini-2.5-flash">gemini-2.5-flash (Best & Fast)</option>
+          <option value="gemini-2.0-flash">gemini-2.0-flash (Backup)</option>
+        </select>
+      </div>
+      <div class="modal-btns">
+        <button id="clearChatBtn" class="btn-danger">Clear Chat</button>
+        <button id="saveSettingsBtn" class="btn-primary">Save Kar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chatEl = document.getElementById('chat');
+    const textInput = document.getElementById('textInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const micBtn = document.getElementById('micBtn');
+    const orbWrap = document.getElementById('orbWrap');
+    const orbCore = document.getElementById('orbCore');
+    const statusText = document.getElementById('statusText');
+    const langSelect = document.getElementById('langSelect');
+    const handsFreeBtn = document.getElementById('handsFreeBtn');
+    const tutorBtn = document.getElementById('tutorBtn');
+    const stopSpeakBtn = document.getElementById('stopSpeakBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const userNameInput = document.getElementById('userNameInput');
+    const memoryInput = document.getElementById('memoryInput');
+    const modelSelect = document.getElementById('modelSelect');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    const clearChatBtn = document.getElementById('clearChatBtn');
+
+    // Load Saved State
+    let apiKey = localStorage.getItem('sara_api_key') || '';
+    let userName = localStorage.getItem('sara_user_name') || 'Dost';
+    let userMemory = localStorage.getItem('sara_memory') || '';
+    let selectedModel = localStorage.getItem('sara_model') || 'gemini-2.5-flash';
+    let history = JSON.parse(localStorage.getItem('sara_history') || '[]');
+    let handsFree = false;
+    let tutorMode = false;
+    let isListening = false;
+    let isSpeaking = false;
+    let wakeLock = null;
+    let recognition = null;
+
+    apiKeyInput.value = apiKey;
+    userNameInput.value = userName;
+    memoryInput.value = userMemory;
+    modelSelect.value = selectedModel;
+
+    function setOrbState(state, text) {
+      orbWrap.className = 'orb-wrap ' + state;
+      statusText.textContent = text;
+      if (state === 'listening') orbCore.textContent = '🎙️';
+      else if (state === 'thinking') orbCore.textContent = '🧠';
+      else if (state === 'speaking') orbCore.textContent = '💬';
+      else orbCore.textContent = '✨';
+    }
+
+    function addBubble(role, text) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + role;
+      div.textContent = text;
+      chatEl.appendChild(div);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    function renderHistory() {
+      chatEl.innerHTML = '';
+      if (history.length === 0) {
+        addBubble('sara', `Hey ${userName}! Mi SARA aahe. Bol, aaj kay plan aahe? 😊`);
+      } else {
+        history.forEach(m => addBubble(m.role === 'user' ? 'user' : 'sara', m.text));
+      }
+    }
+    renderHistory();
+
+    // Wake Lock for Bluetooth Hands-Free
+    async function toggleWakeLock(enable) {
+      if (!('wakeLock' in navigator)) return;
+      try {
+        if (enable && !wakeLock) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        } else if (!enable && wakeLock) {
+          await wakeLock.release();
+          wakeLock = null;
+        }
+      } catch (e) {}
+    }
+
+    // Speech Recognition Setup
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        isListening = true;
+        micBtn.classList.add('listening');
+        setOrbState('listening', handsFree ? '🎧 Bluetooth Hands-Free chalu... Bol!' : 'Aikat aahe... Bol!');
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.trim();
+        if (transcript) handleUserMessage(transcript);
+      };
+
+      recognition.onerror = (e) => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        if (e.error === 'not-allowed') {
+          setOrbState('', 'Mic permission deny jhali! Chrome settings madhe Allow kar.');
+          handsFree = false;
+          updateChips();
+          return;
+        }
+        if (handsFree && !isSpeaking) {
+          setTimeout(startListening, 700);
+        } else {
+          setOrbState('', 'Aawaj nahi aala, parat mic dabun bol.');
+        }
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        if (handsFree && !isSpeaking && !orbWrap.classList.contains('thinking')) {
+          setTimeout(startListening, 500);
+        }
+      };
+    } else {
+      addBubble('system', 'Ya browser madhe Voice Recognition support nahi. Google Chrome vapar.');
+    }
+
+    function startListening() {
+      if (!recognition || isListening || isSpeaking) return;
+      try {
+        recognition.lang = langSelect.value;
+        recognition.start();
+      } catch (e) {}
+    }
+
+    function stopListening() {
+      if (recognition && isListening) {
+        try { recognition.stop(); } catch (e) {}
+      }
+      isListening = false;
+      micBtn.classList.remove('listening');
+    }
+
+    // Clean text for natural voice
+    function cleanForSpeech(text) {
+      return text
+        .replace(/[*#_`~>]/g, '')
+        .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    // Pick Best Female Voice
+    let voices = [];
+    function loadVoices() { voices = window.speechSynthesis.getVoices(); }
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+
+    function speak(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const spokenText = cleanForSpeech(text);
+      if (!spokenText) return;
+
+      const utter = new SpeechSynthesisUtterance(spokenText);
+      const lang = tutorMode ? 'en-IN' : langSelect.value;
+      utter.lang = lang;
+      utter.pitch = 1.12;
+      utter.rate = 1.02;
+
+      const langPrefix = lang.split('-')[0];
+      const matching = voices.filter(v => v.lang.toLowerCase().startsWith(langPrefix));
+      const female = matching.find(v => /female|woman|heera|neerja|kalpana|google|samantha|aria/i.test(v.name)) || matching[0];
+      if (female) utter.voice = female;
+
+      utter.onstart = () => {
+        isSpeaking = true;
+        stopListening();
+        setOrbState('speaking', 'SARA bolat aahe...');
+      };
+      utter.onend = () => {
+        isSpeaking = false;
+        if (handsFree) {
+          setOrbState('', '🎧 Parat aikat aahe...');
+          setTimeout(startListening, 450);
+        } else {
+          setOrbState('', 'Mic dabun bol kiva type kar');
+        }
+      };
+      utter.onerror = () => {
+        isSpeaking = false;
+        setOrbState('', 'Ready');
+      };
+
+      window.speechSynthesis.speak(utter);
+    }
+
+    function buildSystemPrompt() {
+      const langMap = { 'mr-IN': 'Marathi', 'hi-IN': 'Hindi', 'en-IN': 'English' };
+      const chosenLang = langMap[langSelect.value] || 'Marathi';
+
+      if (tutorMode) {
+        return `You are SARA, a warm, encouraging, playful personal English tutor talking to ${userName}.
+Memory about ${userName}: ${userMemory || 'None yet'}.
+Speak mostly in simple, clear spoken English. If ${userName} makes any grammar or sentence mistake, gently correct it in 1 short sentence, explain briefly (in Marathi or Hindi if helpful), and ask 1 fun follow-up question to keep them practicing speaking. Keep answers short (2-4 sentences) for voice conversation. Do NOT use markdown bullet points or asterisks.`;
+      }
+
+      return `You are SARA, a smart, caring, slightly playful (khodkar), emotional, and witty personal AI assistant and close friend of ${userName}.
+Memory about ${userName}: ${userMemory || 'None yet'}.
+Rules:
+- Reply naturally in ${chosenLang} (or match the exact language/script ${userName} speaks in — Marathi, Hindi, or English).
+- Be expressive, warm, crack light jokes when suitable, care about their day, and occasionally ask short engaging follow-up questions.
+- Keep responses concise and natural for voice (2 to 4 sentences) unless they ask for detailed info.
+- NEVER use markdown formatting like **, *, #, or bullet lists because your replies are spoken aloud.`;
+    }
+
+    async function handleUserMessage(text) {
+      if (!apiKey) {
+        addBubble('system', 'Pahile var "⚙️ Setup" madhe jaun tuzhi Gemini API Key save kar!');
+        settingsModal.classList.add('open');
+        return;
+      }
+
+      stopListening();
+      window.speechSynthesis.cancel();
+      addBubble('user', text);
+      history.push({ role: 'user', text });
+      if (history.length > 24) history = history.slice(-24);
+      localStorage.setItem('sara_history', JSON.stringify(history));
+
+      setOrbState('thinking', 'SARA vichar karat aahe...');
+
+      const contents = history.map(m => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        parts: [{ text: m.text }]
+      }));
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: buildSystemPrompt() }] },
+            contents,
+            generationConfig: { temperature: 0.85, maxOutputTokens: 350 }
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error?.message || 'API Error');
+        }
+
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Aata mala samajla nahi, parat sangshil ka?';
+        addBubble('sara', reply);
+        history.push({ role: 'model', text: reply });
+        localStorage.setItem('sara_history', JSON.stringify(history));
+        speak(reply);
+      } catch (err) {
+        setOrbState('', 'Error aala! Settings madhe API key check kar.');
+        addBubble('system', 'Error: ' + err.message);
+        if (handsFree) { handsFree = false; updateChips(); }}
+    }
+
+    // UI Events
+    sendBtn.onclick = () => {
+      const val = textInput.value.trim();
+      if (!val) return;
+      textInput.value = '';
+      handleUserMessage(val);
+    };
+    textInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendBtn.click(); });
+
+    micBtn.onclick = () => {
+      if (isSpeaking) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+      }
+      if (isListening) stopListening();
+      else startListening();
+    };
+
+    stopSpeakBtn.onclick = () => {
+      window.speechSynthesis.cancel();
+      isSpeaking = false;
+      stopListening();
+      setOrbState('', 'Thambavla. Bolaycha asel tar mic dab.');
+    };
+
+    function updateChips() {
+      handsFreeBtn.classList.toggle('on', handsFree);
+      handsFreeBtn.textContent = handsFree ? '🎧 Hands-Free: ON' : '🎧 Hands-Free: OFF';
+      tutorBtn.classList.toggle('on', tutorMode);
+      tutorBtn.textContent = tutorMode ? '🎓 English Tutor: ON' : '🎓 English Tutor: OFF';
+      toggleWakeLock(handsFree);
+    }
+
+    handsFreeBtn.onclick = () => {
+      handsFree = !handsFree;
+      updateChips();
+      if (handsFree) {
+        addBubble('system', '🎧 Hands-Free Bluetooth Mode ON! Ekda mic chalu jhala ki bina button dabta bol.');
+        startListening();
+      } else {
+        stopListening();
+        setOrbState('', 'Hands-Free band kela.');
+      }
+    };
+
+    tutorBtn.onclick = () => {
+      tutorMode = !tutorMode;
+      updateChips();
+      if (tutorMode) {
+        langSelect.value = 'en-IN';
+        addBubble('system', '🎓 English Tutor Mode ON! Aata SARA tuzhyashi English practice karel aani chuka sudharel.');
+      }
+    };
+
+    settingsBtn.onclick = () => settingsModal.classList.add('open');
+    settingsModal.onclick = (e) => { if (e.target === settingsModal) settingsModal.classList.remove('open'); };
+
+    saveSettingsBtn.onclick = () => {
+      apiKey = apiKeyInput.value.trim();
+      userName = userNameInput.value.trim() || 'Dost';
+      userMemory = memoryInput.value.trim();
+      selectedModel = modelSelect.value;
+      localStorage.setItem('sara_api_key', apiKey);
+      localStorage.setItem('sara_user_name', userName);
+      localStorage.setItem('sara_memory', userMemory);
+      localStorage.setItem('sara_model', selectedModel);
+      settingsModal.classList.remove('open');
+      addBubble('system', '✅ Settings save jhalya! Aata mic dabun SARA shi bol.');
+    };
+
+    clearChatBtn.onclick = () => {
+      history = [];
+      localStorage.removeItem('sara_history');
+      renderHistory();
+      settingsModal.classList.remove('open');
+    };
+
+    if (!apiKey) {
+      setTimeout(() => settingsModal.classList.add('open'), 600);
+    }
+  </script>
+</body>
+</html>
+  
