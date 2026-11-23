@@ -7,7 +7,7 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body {
-      background: radial-gradient(circle at top, #15264c, #060913 72%);
+      background: radial-gradient(circle at top, #172a54, #060913 72%);
       color: #eef4ff;
       height: 100dvh;
       display: flex;
@@ -18,7 +18,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 14px;
+      padding: 10px 14px;
       background: rgba(10, 16, 35, 0.92);
       border-bottom: 1px solid rgba(56, 189, 248, 0.25);
       gap: 8px;
@@ -32,7 +32,7 @@
       border: 1px solid rgba(255, 255, 255, 0.2);
       background: rgba(255, 255, 255, 0.1);
       color: #fff;
-      padding: 8px 11px;
+      padding: 7px 10px;
     }
     button.active {
       background: rgba(56, 189, 248, 0.28);
@@ -42,42 +42,55 @@
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      padding: 10px 14px;
-      background: rgba(8, 13, 28, 0.8);
+      padding: 8px 14px;
+      background: rgba(8, 13, 28, 0.82);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
     .main {
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: 12px 14px;
-      gap: 12px;
+      padding: 10px 14px;
+      gap: 10px;
       overflow: hidden;
     }
-    .orb-box { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-    .orb {
-      width: 82px;
-      height: 82px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #67e8f9, #2563eb 65%, #1e1b4b);
-      box-shadow: 0 0 26px rgba(56, 189, 248, 0.45);
+    .avatar-section {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      gap: 6px;
     }
-    .orb.listening {
-      transform: scale(1.1);
-      box-shadow: 0 0 38px rgba(0, 230, 118, 0.8);
+    .avatar-stage {
+      width: 156px;
+      height: 156px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid rgba(56, 189, 248, 0.55);
+      box-shadow: 0 0 28px rgba(56, 189, 248, 0.35);
+      background: radial-gradient(circle at 30% 25%, #23437a, #0b1329 75%);
+      position: relative;
+      cursor: pointer;
     }
-    .status-text { font-size: 13px; color: #cbd5e1; text-align: center; }
+    .avatar-stage.listening {
+      border-color: #00e676;
+      box-shadow: 0 0 34px rgba(0, 230, 118, 0.65);
+    }
+    .avatar-stage.speaking {
+      border-color: #38bdf8;
+      box-shadow: 0 0 38px rgba(56, 189, 248, 0.8);
+    }
+    .avatar-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .status-text { font-size: 12.5px; color: #cbd5e1; text-align: center; }
     .chat {
       flex: 1;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 9px;
       padding-right: 2px;
     }
     .msg {
@@ -150,17 +163,19 @@
   </div>
 
   <main class="main">
-    <div class="orb-box">
-      <div id="orb" class="orb" onclick="startMic()">✨</div>
-      <div id="statusText" class="status-text">Mic dabun bol kiva khali type kar</div>
+    <div class="avatar-section">
+      <div id="avatarStage" class="avatar-stage" onclick="startMic()" title="Tap to speak with SARA">
+        <canvas id="avatarCanvas"></canvas>
+      </div>
+      <div id="statusText" class="status-text">Avatar var tap karun bol kiva khali type kar</div>
     </div>
     <div id="chatBox" class="chat">
-      <div class="msg ai">Namaskar! Mi SARA AI. English speaking practice sathi English Tutor ON ahe. Bolayala ki type karayla suruvat kar!</div>
+      <div class="msg ai">Hey! I am SARA, your English speaking coach. Speak or type in English, and I will explain mistakes in simple Marathi and help you practice!</div>
     </div>
   </main>
 
   <form id="chatForm" class="input-bar" onsubmit="handleSubmit(event)">
-    <input id="promptInput" type="text" placeholder="SARA la kahi pan vichar..." autocomplete="off" />
+    <input id="promptInput" type="text" placeholder="Type or tap mic to speak..." autocomplete="off" />
     <button class="primary" type="submit">Send</button>
     <button id="micBtn" type="button" onclick="startMic()">🎤</button>
   </form>
@@ -177,6 +192,7 @@
     </div>
   </div>
 
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
   <script>
     const KEY_NAME = "sara_ai_gemini_key";
     const MODELS = ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-2.5-flash"];
@@ -187,7 +203,8 @@
     const handsFreeBtn = document.getElementById("handsFreeBtn");
     const tutorBtn = document.getElementById("tutorBtn");
     const langSelect = document.getElementById("langSelect");
-    const orb = document.getElementById("orb");
+    const avatarStage = document.getElementById("avatarStage");
+    const avatarCanvas = document.getElementById("avatarCanvas");
     const statusText = document.getElementById("statusText");
     const chatBox = document.getElementById("chatBox");
     const promptInput = document.getElementById("promptInput");
@@ -196,7 +213,123 @@
     let handsFree = false;
     let tutor = true;
     let listening = false;
+    let speakingNow = false;
     let history = [];
+
+    // 3D Female Avatar (Three.js) with blinking, head motion & lip-sync mouth
+    let headGroup, mouthMesh, leftEye, rightEye, leftBrow, rightBrow;
+    function init3DAvatar() {
+      if (!window.THREE) {
+        avatarStage.innerHTML = "<div style='width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:42px;'>👩‍💼</div>";
+        return;
+      }
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+      camera.position.set(0, 0.15, 3.6);
+
+      const renderer = new THREE.WebGLRenderer({ canvas: avatarCanvas, alpha: true, antialias: true });
+      renderer.setSize(156, 156, false);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+      const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
+      keyLight.position.set(2, 3, 4);
+      scene.add(keyLight);
+
+      const rimLight = new THREE.PointLight(0x38bdf8, 2.2, 10);
+      rimLight.position.set(-2, 1, 2);
+      scene.add(rimLight);
+
+      scene.add(new THREE.AmbientLight(0xdbeafe, 0.9));
+
+      const skinMat = new THREE.MeshStandardMaterial({ color: 0xf4c2a1, roughness: 0.45, metalness: 0.05 });
+      const hairMat = new THREE.MeshStandardMaterial({ color: 0x1e1b4b, roughness: 0.55 });
+      const topMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.5 });
+      const eyeMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2 });
+      const lipMat = new THREE.MeshStandardMaterial({ color: 0xf43f5e, roughness: 0.35 });
+
+      const root = new THREE.Group();
+      scene.add(root);
+
+      const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.85, 0.9, 24), topMat);
+      torso.position.set(0, -1.15, 0);
+      root.add(torso);
+
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 0.4, 20), skinMat);
+      neck.position.set(0, -0.62, 0);
+      root.add(neck);
+
+      headGroup = new THREE.Group();
+      headGroup.position.set(0, 0.12, 0);
+      root.add(headGroup);
+
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.68, 32, 32), skinMat);
+      head.scale.set(0.92, 1.08, 0.95);
+      headGroup.add(head);
+
+      const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.72, 32, 32, 0, Math.PI * 2, 0, Math.PI * 0.62), hairMat);
+      hairTop.position.set(0, 0.06, -0.03);
+      hairTop.scale.set(0.97, 1.08, 1.02);
+      headGroup.add(hairTop);
+
+      const hairBack = new THREE.Mesh(new THREE.CylinderGeometry(0.66, 0.58, 1.15, 24), hairMat);
+      hairBack.position.set(0, -0.35, -0.22);
+      headGroup.add(hairBack);
+
+      const eyeGeo = new THREE.SphereGeometry(0.075, 16, 16);
+      leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+      leftEye.position.set(-0.23, 0.08, 0.6);
+      headGroup.add(leftEye);
+
+      rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+      rightEye.position.set(0.23, 0.08, 0.6);
+      headGroup.add(rightEye);
+
+      const browGeo = new THREE.BoxGeometry(0.18, 0.03, 0.04);
+      leftBrow = new THREE.Mesh(browGeo, hairMat);
+      leftBrow.position.set(-0.23, 0.22, 0.61);
+      leftBrow.rotation.z = 0.06;
+      headGroup.add(leftBrow);
+
+      rightBrow = new THREE.Mesh(browGeo, hairMat);
+      rightBrow.position.set(0.23, 0.22, 0.61);
+      rightBrow.rotation.z = -0.06;
+      headGroup.add(rightBrow);
+
+      mouthMesh = new THREE.Mesh(new THREE.SphereGeometry(0.11, 20, 16), lipMat);
+      mouthMesh.position.set(0, -0.24, 0.61);
+      mouthMesh.scale.set(1.15, 0.22, 0.45);
+      headGroup.add(mouthMesh);
+
+      const clock = new THREE.Clock();
+      function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+
+        root.position.y = Math.sin(t * 2.0) * 0.025;
+        headGroup.rotation.y = Math.sin(t * 1.1) * 0.14;
+        headGroup.rotation.z = Math.cos(t * 1.4) * 0.04;
+
+        const blinkCycle = t % 4.2;
+        const eyeScaleY = blinkCycle > 4.05 ? 0.12 : 1.0;
+        leftEye.scale.y = eyeScaleY;
+        rightEye.scale.y = eyeScaleY;
+
+        if (speakingNow) {
+          const openAmt = 0.25 + Math.abs(Math.sin(t * 16.0)) * 0.95;
+          mouthMesh.scale.set(1.05 + Math.sin(t * 11.0) * 0.15, openAmt, 0.6);
+          leftBrow.position.y = 0.24 + Math.sin(t * 8.0) * 0.02;
+          rightBrow.position.y = 0.24 + Math.sin(t * 8.0) * 0.02;
+        } else {
+          mouthMesh.scale.set(1.2, 0.24, 0.45);
+          leftBrow.position.y = 0.22;
+          rightBrow.position.y = 0.22;
+        }
+
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+    init3DAvatar();
 
     function openSetupBox() {
       apiKeyInput.value = localStorage.getItem(KEY_NAME) || "";
@@ -224,7 +357,11 @@
       muted = !muted;
       muteBtn.textContent = muted ? "Mute: ON" : "Mute: OFF";
       muteBtn.classList.toggle("active", muted);
-      if (muted && "speechSynthesis" in window) speechSynthesis.cancel();
+      if (muted && "speechSynthesis" in window) {
+        speechSynthesis.cancel();
+        speakingNow = false;
+        avatarStage.classList.remove("speaking");
+      }
     }
 
     function toggleHandsFree() {
@@ -238,7 +375,7 @@
       tutor = !tutor;
       tutorBtn.textContent = tutor ? "English Tutor: ON" : "English Tutor: OFF";
       tutorBtn.classList.toggle("active", tutor);
-      statusText.textContent = tutor ? "English Tutor mode ON" : "Normal Assistant mode ON";
+      statusText.textContent = tutor ? "English Tutor mode ON" : "Normal mode ON";
     }
 
     function addMsg(text, type) {
@@ -249,13 +386,36 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
+    function cleanSpeech(text) {
+      return text
+        .replace(/[*#_~`]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function detectSpeechLang(text) {
+      return /[\u0900-\u097F]/.test(text) ? "mr-IN" : "en-IN";
+    }
+
     function speak(text) {
       if (muted || !("speechSynthesis" in window)) return;
+      const spokenText = cleanSpeech(text);
+      if (!spokenText) return;
       speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = langSelect.value;
+      const u = new SpeechSynthesisUtterance(spokenText);
+      u.lang = tutor ? detectSpeechLang(spokenText) : langSelect.value;
+      u.onstart = () => {
+        speakingNow = true;
+        avatarStage.classList.add("speaking");
+      };
       u.onend = () => {
+        speakingNow = false;
+        avatarStage.classList.remove("speaking");
         if (handsFree) startMic();
+      };
+      u.onerror = () => {
+        speakingNow = false;
+        avatarStage.classList.remove("speaking");
       };
       speechSynthesis.speak(u);
     }
@@ -267,8 +427,8 @@
       rec.interimResults = false;
       rec.onstart = () => {
         listening = true;
-        orb.classList.add("listening");
-        statusText.textContent = "Aikat ahe... bol!";
+        avatarStage.classList.add("listening");
+        statusText.textContent = "SARA aikat ahe... bol!";
       };
       rec.onresult = (e) => {
         const spoken = e.results[0][0].transcript;
@@ -280,8 +440,8 @@
       };
       rec.onend = () => {
         listening = false;
-        orb.classList.remove("listening");
-        if (!handsFree) statusText.textContent = "Mic dabun bol kiva khali type kar";
+        avatarStage.classList.remove("listening");
+        if (!handsFree) statusText.textContent = "Avatar var tap karun bol kiva khali type kar";
       };
     }
 
@@ -291,7 +451,7 @@
         return;
       }
       if (listening) return;
-      rec.lang = langSelect.value;
+      rec.lang = tutor ? "en-IN" : langSelect.value;
       try {
         rec.start();
       } catch (_) {
@@ -332,15 +492,16 @@
       statusText.textContent = "SARA vichar kartey...";
       const langName = { "mr-IN": "Marathi", "hi-IN": "Hindi", "en-IN": "English" }[langSelect.value] || "Marathi";
       const sys = tutor
-        ? "You are SARA AI, a friendly Sivi-style English speaking coach for a Hindi/Marathi speaker. Reply in 2 to 3 short sentences max. Gently fix any English grammar mistake, give one short English sentence to repeat, and ask one simple follow-up question. Keep English simple and use brief " + langName + " only when helpful."
-        : "You are SARA AI, a helpful personal assistant. Reply clearly and concisely in 2 to 3 short sentences in " + langName + ".";
+        ? "You are SARA, a warm Sivi-style spoken English coach for a Marathi speaker. If the user makes an English mistake, explain why it is wrong and how to fix it in ONE brief Marathi sentence (never translate the whole reply into Marathi). Then give one short natural English sentence to practice and ask one short English follow-up question. Keep the total reply to 2 or 3 short lines max. Do not use asterisks, markdown, or emojis."
+        : "You are SARA AI, a helpful personal assistant. Reply in 2 short plain sentences in " + langName + " only, without repeating in another language. Do not use asterisks, markdown, or emojis.";
 
       const nextHistory = history.concat([{ role: "user", parts: [{ text: clean }] }]).slice(-10);
 
       let lastErr = null;
       for (const m of MODELS) {
         try {
-          const reply = await callModel(m, apiKey, sys, nextHistory);
+          const rawReply = await callModel(m, apiKey, sys, nextHistory);
+          const reply = rawReply.replace(/[*#_~`]/g, "").trim();
           if (!reply) throw new Error("Reply milala nahi.");
           history = nextHistory.concat([{ role: "model", parts: [{ text: reply }] }]).slice(-10);
           addMsg(reply, "ai");
