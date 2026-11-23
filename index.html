@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SARA AI</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body {
-      background: radial-gradient(circle at top, #132244, #060913 70%);
+      background: radial-gradient(circle at top, #15264c, #060913 72%);
       color: #eef4ff;
       height: 100dvh;
       display: flex;
@@ -19,10 +19,11 @@
       align-items: center;
       justify-content: space-between;
       padding: 12px 14px;
-      background: rgba(10, 16, 35, 0.9);
-      border-bottom: 1px solid rgba(0, 229, 255, 0.2);
+      background: rgba(10, 16, 35, 0.92);
+      border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+      gap: 8px;
     }
-    .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+    .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; }
     .dot { width: 10px; height: 10px; border-radius: 50%; background: #00e676; }
     .actions { display: flex; gap: 8px; }
     button, select, input {
@@ -33,12 +34,16 @@
       color: #fff;
       padding: 8px 11px;
     }
+    button.active {
+      background: rgba(56, 189, 248, 0.28);
+      border-color: #38bdf8;
+    }
     .toolbar {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       padding: 10px 14px;
-      background: rgba(8, 13, 28, 0.75);
+      background: rgba(8, 13, 28, 0.8);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
     .main {
@@ -51,42 +56,57 @@
     }
     .orb-box { display: flex; flex-direction: column; align-items: center; gap: 8px; }
     .orb {
-      width: 78px;
-      height: 78px;
+      width: 82px;
+      height: 82px;
       border-radius: 50%;
       background: radial-gradient(circle at 30% 30%, #67e8f9, #2563eb 65%, #1e1b4b);
+      box-shadow: 0 0 26px rgba(56, 189, 248, 0.45);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 28px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+    .orb.listening {
+      transform: scale(1.1);
+      box-shadow: 0 0 38px rgba(0, 230, 118, 0.8);
+    }
+    .status-text { font-size: 13px; color: #cbd5e1; text-align: center; }
     .chat {
       flex: 1;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 10px;
+      padding-right: 2px;
     }
     .msg {
       max-width: 85%;
       padding: 10px 13px;
       border-radius: 14px;
       font-size: 14px;
+      line-height: 1.45;
       white-space: pre-wrap;
+      word-break: break-word;
     }
-    .msg.user { align-self: flex-end; background: #2563eb; }
-    .msg.ai { align-self: flex-start; background: rgba(255, 255, 255, 0.12); }
+    .msg.user { align-self: flex-end; background: #2563eb; color: #fff; }
+    .msg.ai {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
     .input-bar {
       display: flex;
       gap: 8px;
       padding: 10px 14px 14px;
       background: rgba(10, 16, 35, 0.95);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
     .input-bar input { flex: 1; }
     .modal-bg {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.78);
       display: none;
       align-items: center;
       justify-content: center;
@@ -96,7 +116,7 @@
     .modal-bg.show { display: flex; }
     .modal {
       width: 100%;
-      max-width: 380px;
+      max-width: 390px;
       background: #0f172a;
       border: 1px solid #38bdf8;
       border-radius: 14px;
@@ -105,6 +125,7 @@
       flex-direction: column;
       gap: 12px;
     }
+    .modal p { font-size: 13px; color: #cbd5e1; line-height: 1.4; }
     .modal-btns { display: flex; justify-content: flex-end; gap: 8px; }
     .primary { background: #0284c7; border-color: #38bdf8; font-weight: 600; }
   </style>
@@ -113,42 +134,42 @@
   <header>
     <div class="brand"><span class="dot"></span><span>SARA AI</span></div>
     <div class="actions">
-      <button id="muteBtn" type="button">Mute: OFF</button>
+      <button id="muteBtn" type="button" onclick="toggleMute()">Mute: OFF</button>
       <button id="setupBtn" type="button" onclick="openSetupBox()">Setup</button>
     </div>
   </header>
 
   <div class="toolbar">
-    <select id="langSelect">
+    <select id="langSelect" aria-label="Language">
       <option value="mr-IN">मराठी (Marathi)</option>
       <option value="hi-IN">हिन्दी (Hindi)</option>
       <option value="en-IN">English</option>
     </select>
-    <button id="handsFreeBtn" type="button">Hands-Free: OFF</button>
-    <button id="tutorBtn" type="button">English Tutor: OFF</button>
+    <button id="handsFreeBtn" type="button" onclick="toggleHandsFree()">Hands-Free: OFF</button>
+    <button id="tutorBtn" type="button" class="active" onclick="toggleTutor()">English Tutor: ON</button>
   </div>
 
   <main class="main">
     <div class="orb-box">
-      <div id="orb" class="orb">✨</div>
-      <div id="statusText">Mic dabun bol kiva khali type kar</div>
+      <div id="orb" class="orb" onclick="startMic()">✨</div>
+      <div id="statusText" class="status-text">Mic dabun bol kiva khali type kar</div>
     </div>
     <div id="chatBox" class="chat">
-      <div class="msg ai">Namaskar! Mi SARA AI. Setup madhun Gemini API key tak.</div>
+      <div class="msg ai">Namaskar! Mi SARA AI. English speaking practice sathi English Tutor ON ahe. Bolayala ki type karayla suruvat kar!</div>
     </div>
   </main>
 
-  <form id="chatForm" class="input-bar">
-    <input id="promptInput" type="text" placeholder="SARA la kahi pan vichar..." />
+  <form id="chatForm" class="input-bar" onsubmit="handleSubmit(event)">
+    <input id="promptInput" type="text" placeholder="SARA la kahi pan vichar..." autocomplete="off" />
     <button class="primary" type="submit">Send</button>
-    <button id="micBtn" type="button">🎤</button>
+    <button id="micBtn" type="button" onclick="startMic()">🎤</button>
   </form>
 
-  <div id="setupModal" class="modal-bg">
+  <div id="setupModal" class="modal-bg" onclick="backdropClose(event)">
     <div class="modal">
       <h3>SARA AI Setup</h3>
-      <p>Gemini API key ithe taka:</p>
-      <input id="apiKeyInput" type="password" placeholder="AIzaSy..." />
+      <p>Tumchi Google AI Studio Gemini API key ithe taka. Hi key fakta tumchya browser madhe save hoil.</p>
+      <input id="apiKeyInput" type="password" placeholder="AIzaSy..." autocomplete="off" />
       <div class="modal-btns">
         <button id="closeModalBtn" type="button" onclick="closeSetupBox()">Cancel</button>
         <button id="saveKeyBtn" class="primary" type="button" onclick="saveApiKeyBox()">Save</button>
@@ -158,29 +179,37 @@
 
   <script>
     const KEY_NAME = "sara_ai_gemini_key";
+    const MODELS = ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-2.5-flash"];
+
     const setupModal = document.getElementById("setupModal");
     const apiKeyInput = document.getElementById("apiKeyInput");
     const muteBtn = document.getElementById("muteBtn");
     const handsFreeBtn = document.getElementById("handsFreeBtn");
     const tutorBtn = document.getElementById("tutorBtn");
     const langSelect = document.getElementById("langSelect");
+    const orb = document.getElementById("orb");
     const statusText = document.getElementById("statusText");
     const chatBox = document.getElementById("chatBox");
-    const chatForm = document.getElementById("chatForm");
     const promptInput = document.getElementById("promptInput");
-    const micBtn = document.getElementById("micBtn");
 
     let muted = false;
     let handsFree = false;
-    let tutor = false;
+    let tutor = true;
+    let listening = false;
+    let history = [];
 
     function openSetupBox() {
       apiKeyInput.value = localStorage.getItem(KEY_NAME) || "";
       setupModal.classList.add("show");
+      apiKeyInput.focus();
     }
 
     function closeSetupBox() {
       setupModal.classList.remove("show");
+    }
+
+    function backdropClose(e) {
+      if (e.target === setupModal) closeSetupBox();
     }
 
     function saveApiKeyBox() {
@@ -191,22 +220,26 @@
       statusText.textContent = val ? "API Key save zali!" : "API Key remove keli";
     }
 
-    muteBtn.onclick = () => {
+    function toggleMute() {
       muted = !muted;
       muteBtn.textContent = muted ? "Mute: ON" : "Mute: OFF";
+      muteBtn.classList.toggle("active", muted);
       if (muted && "speechSynthesis" in window) speechSynthesis.cancel();
-    };
+    }
 
-    handsFreeBtn.onclick = () => {
+    function toggleHandsFree() {
       handsFree = !handsFree;
       handsFreeBtn.textContent = handsFree ? "Hands-Free: ON" : "Hands-Free: OFF";
+      handsFreeBtn.classList.toggle("active", handsFree);
       if (handsFree) startMic();
-    };
+    }
 
-    tutorBtn.onclick = () => {
+    function toggleTutor() {
       tutor = !tutor;
       tutorBtn.textContent = tutor ? "English Tutor: ON" : "English Tutor: OFF";
-    };
+      tutorBtn.classList.toggle("active", tutor);
+      statusText.textContent = tutor ? "English Tutor mode ON" : "Normal Assistant mode ON";
+    }
 
     function addMsg(text, type) {
       const d = document.createElement("div");
@@ -221,22 +254,35 @@
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = langSelect.value;
-      u.onend = () => { if (handsFree) startMic(); };
+      u.onend = () => {
+        if (handsFree) startMic();
+      };
       speechSynthesis.speak(u);
     }
 
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     const rec = SR ? new SR() : null;
+
     if (rec) {
       rec.interimResults = false;
-      rec.onstart = () => { statusText.textContent = "Aikat ahe... bol!"; };
+      rec.onstart = () => {
+        listening = true;
+        orb.classList.add("listening");
+        statusText.textContent = "Aikat ahe... bol!";
+      };
       rec.onresult = (e) => {
         const spoken = e.results[0][0].transcript;
         promptInput.value = spoken;
         askGemini(spoken);
       };
-      rec.onerror = (e) => { statusText.textContent = "Mic error: " + e.error; };
-      rec.onend = () => { if (!handsFree) statusText.textContent = "Mic dabun bol kiva khali type kar"; };
+      rec.onerror = (e) => {
+        statusText.textContent = "Mic error: " + e.error;
+      };
+      rec.onend = () => {
+        listening = false;
+        orb.classList.remove("listening");
+        if (!handsFree) statusText.textContent = "Mic dabun bol kiva khali type kar";
+      };
     }
 
     function startMic() {
@@ -244,11 +290,31 @@
         statusText.textContent = "Browser mic support nahi";
         return;
       }
+      if (listening) return;
       rec.lang = langSelect.value;
-      try { rec.start(); } catch (_) {}
+      try {
+        rec.start();
+      } catch (_) {
+        statusText.textContent = "Mic suru karta aala nahi";
+      }
     }
 
-    micBtn.onclick = startMic;
+    async function callModel(modelName, apiKey, sys, contents) {
+      const res = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + encodeURIComponent(apiKey),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: sys }] },
+            contents: contents
+          })
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error?.message || "API error");
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    }
 
     async function askGemini(text) {
       const clean = (text || "").trim();
@@ -265,40 +331,35 @@
 
       statusText.textContent = "SARA vichar kartey...";
       const langName = { "mr-IN": "Marathi", "hi-IN": "Hindi", "en-IN": "English" }[langSelect.value] || "Marathi";
-      const sys = const sys = tutor
-        ? "You are SARA AI, a friendly English speaking coach for a Hindi/Marathi speaker. Reply in 2 to 3 short sentences max. Give a simple English sentence to repeat or practice, gently fix any English mistake, and end with one short question. Use simple English with a little " + langName + " only when needed."
-        : "You are SARA AI, a helpful assistant. Reply in 2 to 3 short sentences max in " + langName + ".";
-        ? "You are SARA AI, an English tutor. Reply clearly and gently correct mistakes in " + langName + "."
-        : "You are SARA AI, a helpful assistant. Reply clearly and concisely in " + langName + ".";
+      const sys = tutor
+        ? "You are SARA AI, a friendly Sivi-style English speaking coach for a Hindi/Marathi speaker. Reply in 2 to 3 short sentences max. Gently fix any English grammar mistake, give one short English sentence to repeat, and ask one simple follow-up question. Keep English simple and use brief " + langName + " only when helpful."
+        : "You are SARA AI, a helpful personal assistant. Reply clearly and concisely in 2 to 3 short sentences in " + langName + ".";
 
-      try {
-        const res = await fetch(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=" + encodeURIComponent(apiKey),
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              system_instruction: { parts: [{ text: sys }] },
-              contents: [{ parts: [{ text: clean }] }]
-            })
-          }
-        );
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.error?.message || "API error");
-        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Reply milala nahi.";
-        addMsg(reply, "ai");
-        statusText.textContent = "Tayyar!";
-        speak(reply);
-      } catch (err) {
-        addMsg("Error: " + err.message, "ai");
-        statusText.textContent = "Error aala";
+      const nextHistory = history.concat([{ role: "user", parts: [{ text: clean }] }]).slice(-10);
+
+      let lastErr = null;
+      for (const m of MODELS) {
+        try {
+          const reply = await callModel(m, apiKey, sys, nextHistory);
+          if (!reply) throw new Error("Reply milala nahi.");
+          history = nextHistory.concat([{ role: "model", parts: [{ text: reply }] }]).slice(-10);
+          addMsg(reply, "ai");
+          statusText.textContent = "Tayyar (" + m + ")";
+          speak(reply);
+          return;
+        } catch (err) {
+          lastErr = err;
+        }
       }
+
+      addMsg("Error: " + (lastErr?.message || "Kahi chuk zali"), "ai");
+      statusText.textContent = "Error aala";
     }
 
-    chatForm.onsubmit = (e) => {
+    function handleSubmit(e) {
       e.preventDefault();
       askGemini(promptInput.value);
-    };
+    }
   </script>
 </body>
-</html>
+  </html>
