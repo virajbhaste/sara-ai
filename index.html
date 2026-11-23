@@ -5,13 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SARA AI</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
     body {
       background: radial-gradient(circle at top, #132244, #060913 70%);
       color: #eef4ff;
@@ -20,156 +14,76 @@
       flex-direction: column;
       overflow: hidden;
     }
-
     header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 12px 14px;
-      background: rgba(10, 16, 35, 0.85);
+      background: rgba(10, 16, 35, 0.9);
       border-bottom: 1px solid rgba(0, 229, 255, 0.2);
-      gap: 8px;
-      z-index: 5;
     }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 700;
-      font-size: 16px;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #00e676;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 8px;
-    }
-
+    .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #00e676; }
+    .actions { display: flex; gap: 8px; }
     button, select, input {
       font-size: 13px;
       border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
       color: #fff;
       padding: 8px 11px;
-      cursor: pointer;
     }
-
-    button:active {
-      transform: scale(0.97);
-    }
-
-    button.active {
-      background: rgba(0, 229, 255, 0.25);
-      border-color: #00e5ff;
-    }
-
     .toolbar {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       padding: 10px 14px;
-      background: rgba(8, 13, 28, 0.7);
+      background: rgba(8, 13, 28, 0.75);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      z-index: 4;
     }
-
     .main {
       flex: 1;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
       padding: 12px 14px;
       gap: 12px;
+      overflow: hidden;
     }
-
-    .orb-area {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 8px 0;
-      gap: 8px;
-    }
-
+    .orb-box { display: flex; flex-direction: column; align-items: center; gap: 8px; }
     .orb {
-      width: 84px;
-      height: 84px;
+      width: 78px;
+      height: 78px;
       border-radius: 50%;
       background: radial-gradient(circle at 30% 30%, #67e8f9, #2563eb 65%, #1e1b4b);
-      box-shadow: 0 0 28px rgba(56, 189, 248, 0.45);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 28px;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-
-    .orb.listening {
-      transform: scale(1.1);
-      box-shadow: 0 0 38px rgba(0, 230, 118, 0.75);
-    }
-
-    .status-text {
-      font-size: 13px;
-      color: #cbd5e1;
-      text-align: center;
-    }
-
-    .chat-box {
+    .chat {
       flex: 1;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      padding-right: 4px;
     }
-
     .msg {
       max-width: 85%;
       padding: 10px 13px;
       border-radius: 14px;
       font-size: 14px;
-      line-height: 1.45;
       white-space: pre-wrap;
-      word-break: break-word;
     }
-
-    .msg.user {
-      align-self: flex-end;
-      background: #2563eb;
-      color: #fff;
-    }
-
-    .msg.ai {
-      align-self: flex-start;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
+    .msg.user { align-self: flex-end; background: #2563eb; }
+    .msg.ai { align-self: flex-start; background: rgba(255, 255, 255, 0.12); }
     .input-bar {
       display: flex;
       gap: 8px;
       padding: 10px 14px 14px;
-      background: rgba(10, 16, 35, 0.9);
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      z-index: 5;
+      background: rgba(10, 16, 35, 0.95);
     }
-
-    .input-bar input {
-      flex: 1;
-      cursor: text;
-      padding: 10px 12px;
-    }
-
-    .modal-backdrop {
+    .input-bar input { flex: 1; }
+    .modal-bg {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.75);
@@ -177,68 +91,35 @@
       align-items: center;
       justify-content: center;
       padding: 16px;
-      z-index: 50;
+      z-index: 99;
     }
-
-    .modal-backdrop.open {
-      display: flex;
-    }
-
+    .modal-bg.show { display: flex; }
     .modal {
       width: 100%;
-      max-width: 400px;
+      max-width: 380px;
       background: #0f172a;
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      border-radius: 16px;
-      padding: 18px;
+      border: 1px solid #38bdf8;
+      border-radius: 14px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
-
-    .modal h3 {
-      font-size: 17px;
-    }
-
-    .modal p {
-      font-size: 13px;
-      color: #cbd5e1;
-      line-height: 1.4;
-    }
-
-    .modal input {
-      width: 100%;
-      cursor: text;
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 4px;
-    }
-
-    .primary-btn {
-      background: #0284c7;
-      border-color: #38bdf8;
-      font-weight: 600;
-    }
+    .modal-btns { display: flex; justify-content: flex-end; gap: 8px; }
+    .primary { background: #0284c7; border-color: #38bdf8; font-weight: 600; }
   </style>
 </head>
 <body>
   <header>
-    <div class="brand">
-      <span class="dot"></span>
-      <span>SARA AI</span>
-    </div>
-    <div class="header-actions">
+    <div class="brand"><span class="dot"></span><span>SARA AI</span></div>
+    <div class="actions">
       <button id="muteBtn" type="button">Mute: OFF</button>
-      <button id="setupBtn" type="button">Setup</button>
+      <button id="setupBtn" type="button" onclick="openSetupBox()">Setup</button>
     </div>
   </header>
 
   <div class="toolbar">
-    <select id="langSelect" aria-label="Language">
+    <select id="langSelect">
       <option value="mr-IN">मराठी (Marathi)</option>
       <option value="hi-IN">हिन्दी (Hindi)</option>
       <option value="en-IN">English</option>
@@ -248,203 +129,174 @@
   </div>
 
   <main class="main">
-    <div class="orb-area">
+    <div class="orb-box">
       <div id="orb" class="orb">✨</div>
-      <div id="statusText" class="status-text">Mic dabun bol kiva khali type kar</div>
+      <div id="statusText">Mic dabun bol kiva khali type kar</div>
     </div>
-    <div id="chatBox" class="chat-box">
-      <div class="msg ai">Namaskar! Mi SARA AI. Setup madhun Gemini API key tak ani bolayla ki type karayla suruvat kar.</div>
+    <div id="chatBox" class="chat">
+      <div class="msg ai">Namaskar! Mi SARA AI. Setup madhun Gemini API key tak.</div>
     </div>
   </main>
 
   <form id="chatForm" class="input-bar">
-    <input id="promptInput" type="text" placeholder="SARA la kahi pan vichar..." autocomplete="off" />
-    <button id="sendBtn" class="primary-btn" type="submit">Send</button>
+    <input id="promptInput" type="text" placeholder="SARA la kahi pan vichar..." />
+    <button class="primary" type="submit">Send</button>
     <button id="micBtn" type="button">🎤</button>
   </form>
 
-  <div id="setupModal" class="modal-backdrop" role="dialog" aria-modal="true">
+  <div id="setupModal" class="modal-bg">
     <div class="modal">
       <h3>SARA AI Setup</h3>
-      <p>Tumchi Google AI Studio Gemini API key ithe taka. Hi key fakta tumchya phone chya browser madhe save hoil.</p>
-      <input id="apiKeyInput" type="password" placeholder="AIzaSy..." autocomplete="off" />
-      <div class="modal-actions">
-        <button id="closeModalBtn" type="button">Cancel</button>
-        <button id="saveKeyBtn" class="primary-btn" type="button">Save Key</button>
+      <p>Gemini API key ithe taka:</p>
+      <input id="apiKeyInput" type="password" placeholder="AIzaSy..." />
+      <div class="modal-btns">
+        <button id="closeModalBtn" type="button" onclick="closeSetupBox()">Cancel</button>
+        <button id="saveKeyBtn" class="primary" type="button" onclick="saveApiKeyBox()">Save</button>
       </div>
     </div>
   </div>
 
   <script>
-    (function () {
-      const STORAGE_KEY = "sara_ai_gemini_key";
+    const KEY_NAME = "sara_ai_gemini_key";
+    const setupModal = document.getElementById("setupModal");
+    const apiKeyInput = document.getElementById("apiKeyInput");
+    const muteBtn = document.getElementById("muteBtn");
+    const handsFreeBtn = document.getElementById("handsFreeBtn");
+    const tutorBtn = document.getElementById("tutorBtn");
+    const langSelect = document.getElementById("langSelect");
+    const statusText = document.getElementById("statusText");
+    const chatBox = document.getElementById("chatBox");
+    const chatForm = document.getElementById("chatForm");
+    const promptInput = document.getElementById("promptInput");
+    const micBtn = document.getElementById("micBtn");
 
-      const muteBtn = document.getElementById("muteBtn");
-      const setupBtn = document.getElementById("setupBtn");
-      const langSelect = document.getElementById("langSelect");
-      const handsFreeBtn = document.getElementById("handsFreeBtn");
-      const tutorBtn = document.getElementById("tutorBtn");
-      const orb = document.getElementById("orb");
-      const statusText = document.getElementById("statusText");
-      const chatBox = document.getElementById("chatBox");
-      const chatForm = document.getElementById("chatForm");
-      const promptInput = document.getElementById("promptInput");
-      const micBtn = document.getElementById("micBtn");
+    let muted = false;
+    let handsFree = false;
+    let tutor = false;
 
-      const setupModal = document.getElementById("setupModal");
-      const apiKeyInput = document.getElementById("apiKeyInput");
-      const closeModalBtn = document.getElementById("closeModalBtn");
-      const saveKeyBtn = document.getElementById("saveKeyBtn");
+    function openSetupBox() {
+      apiKeyInput.value = localStorage.getItem(KEY_NAME) || "";
+      setupModal.classList.add("show");
+    }
 
-      let isMuted = false;
-      let handsFree = false;
-      let englishTutor = false;
-      let isListening = false;
+    function closeSetupBox() {
+      setupModal.classList.remove("show");
+    }
 
-      function setStatus(msg) {
-        statusText.textContent = msg;
+    function saveApiKeyBox() {
+      const val = apiKeyInput.value.trim();
+      if (val) localStorage.setItem(KEY_NAME, val);
+      else localStorage.removeItem(KEY_NAME);
+      closeSetupBox();
+      statusText.textContent = val ? "API Key save zali!" : "API Key remove keli";
+    }
+
+    muteBtn.onclick = () => {
+      muted = !muted;
+      muteBtn.textContent = muted ? "Mute: ON" : "Mute: OFF";
+      if (muted && "speechSynthesis" in window) speechSynthesis.cancel();
+    };
+
+    handsFreeBtn.onclick = () => {
+      handsFree = !handsFree;
+      handsFreeBtn.textContent = handsFree ? "Hands-Free: ON" : "Hands-Free: OFF";
+      if (handsFree) startMic();
+    };
+
+    tutorBtn.onclick = () => {
+      tutor = !tutor;
+      tutorBtn.textContent = tutor ? "English Tutor: ON" : "English Tutor: OFF";
+    };
+
+    function addMsg(text, type) {
+      const d = document.createElement("div");
+      d.className = "msg " + type;
+      d.textContent = text;
+      chatBox.appendChild(d);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function speak(text) {
+      if (muted || !("speechSynthesis" in window)) return;
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = langSelect.value;
+      u.onend = () => { if (handsFree) startMic(); };
+      speechSynthesis.speak(u);
+    }
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = SR ? new SR() : null;
+    if (rec) {
+      rec.interimResults = false;
+      rec.onstart = () => { statusText.textContent = "Aikat ahe... bol!"; };
+      rec.onresult = (e) => {
+        const spoken = e.results[0][0].transcript;
+        promptInput.value = spoken;
+        askGemini(spoken);
+      };
+      rec.onerror = (e) => { statusText.textContent = "Mic error: " + e.error; };
+      rec.onend = () => { if (!handsFree) statusText.textContent = "Mic dabun bol kiva khali type kar"; };
+    }
+
+    function startMic() {
+      if (!rec) {
+        statusText.textContent = "Browser mic support nahi";
+        return;
+      }
+      rec.lang = langSelect.value;
+      try { rec.start(); } catch (_) {}
+    }
+
+    micBtn.onclick = startMic;
+
+    async function askGemini(text) {
+      const clean = (text || "").trim();
+      if (!clean) return;
+      const apiKey = localStorage.getItem(KEY_NAME);
+      addMsg(clean, "user");
+      promptInput.value = "";
+
+      if (!apiKey) {
+        addMsg("Adhi Setup madhun Gemini API key save kar.", "ai");
+        openSetupBox();
+        return;
       }
 
-      function addMessage(text, sender) {
-        const div = document.createElement("div");
-        div.className = "msg " + sender;
-        div.textContent = text;
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
+      statusText.textContent = "SARA vichar kartey...";
+      const langName = { "mr-IN": "Marathi", "hi-IN": "Hindi", "en-IN": "English" }[langSelect.value] || "Marathi";
+      const sys = tutor
+        ? "You are SARA AI, an English tutor. Reply clearly and gently correct mistakes in " + langName + "."
+        : "You are SARA AI, a helpful assistant. Reply clearly and concisely in " + langName + ".";
+
+      try {
+        const res = await fetch(
+          "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + encodeURIComponent(apiKey),
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              system_instruction: { parts: [{ text: sys }] },
+              contents: [{ parts: [{ text: clean }] }]
+            })
+          }
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error?.message || "API error");
+        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Reply milala nahi.";
+        addMsg(reply, "ai");
+        statusText.textContent = "Tayyar!";
+        speak(reply);
+      } catch (err) {
+        addMsg("Error: " + err.message, "ai");
+        statusText.textContent = "Error aala";
       }
+    }
 
-      function speakText(text) {
-        if (isMuted || !("speechSynthesis" in window)) return;
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = langSelect.value;
-        utter.onend = () => {
-          if (handsFree) startListening();
-        };
-        window.speechSynthesis.speak(utter);
-      }
-
-      function openSetup() {
-        apiKeyInput.value = localStorage.getItem(STORAGE_KEY) || "";
-        setupModal.classList.add("open");
-        apiKeyInput.focus();
-      }
-
-      function closeSetup() {
-        setupModal.classList.remove("open");
-      }
-
-      setupBtn.addEventListener("click", openSetup);
-      closeModalBtn.addEventListener("click", closeSetup);
-
-      setupModal.addEventListener("click", (e) => {
-        if (e.target === setupModal) closeSetup();
-      });
-
-      saveKeyBtn.addEventListener("click", () => {
-        const key = apiKeyInput.value.trim();
-        if (!key) {
-          localStorage.removeItem(STORAGE_KEY);
-          setStatus("API key remove keli");
-        } else {
-          localStorage.setItem(STORAGE_KEY, key);
-          setStatus("API key save zali!");
-        }
-        closeSetup();
-      });
-
-      muteBtn.addEventListener("click", () => {
-        isMuted = !isMuted;
-        muteBtn.textContent = isMuted ? "Mute: ON" : "Mute: OFF";
-        muteBtn.classList.toggle("active", isMuted);
-        if (isMuted && "speechSynthesis" in window) {
-          window.speechSynthesis.cancel();
-        }
-      });
-
-      handsFreeBtn.addEventListener("click", () => {
-        handsFree = !handsFree;
-        handsFreeBtn.textContent = handsFree ? "Hands-Free: ON" : "Hands-Free: OFF";
-        handsFreeBtn.classList.toggle("active", handsFree);
-        if (handsFree) {
-          startListening();
-        }
-      });
-
-      tutorBtn.addEventListener("click", () => {
-        englishTutor = !englishTutor;
-        tutorBtn.textContent = englishTutor ? "English Tutor: ON" : "English Tutor: OFF";
-        tutorBtn.classList.toggle("active", englishTutor);
-        setStatus(englishTutor ? "English Tutor mode ON" : "Normal mode ON");
-      });
-
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      let recognition = null;
-
-      if (SpeechRecognition) {
-        recognition = new SpeechRecognition();
-        recognition.interimResults = false;
-
-        recognition.onstart = () => {
-          isListening = true;
-          orb.classList.add("listening");
-          setStatus("Aikat ahe... bol!");
-        };
-
-        recognition.onresult = (event) => {
-          const transcript = event.results[0][0].transcript;
-          promptInput.value = transcript;
-          sendPrompt(transcript);
-        };
-
-        recognition.onerror = (event) => {
-          setStatus("Mic error: " + event.error);
-        };
-
-        recognition.onend = () => {
-          isListening = false;
-          orb.classList.remove("listening");
-          if (!handsFree) setStatus("Mic dabun bol kiva khali type kar");
-        };
-      }
-
-      function startListening() {
-        if (!recognition) {
-          setStatus("Browser madhe speech recognition support nahi");
-          return;
-        }
-        if (isListening) return;
-        recognition.lang = langSelect.value;
-        try {
-          recognition.start();
-        } catch (err) {
-          setStatus("Mic suru karta aala nahi");
-        }
-      }
-
-      micBtn.addEventListener("click", startListening);
-      orb.addEventListener("click", startListening);
-
-      async function sendPrompt(text) {
-        const clean = (text || "").trim();
-        if (!clean) return;
-
-        const apiKey = localStorage.getItem(STORAGE_KEY);
-        if (!apiKey) {
-          addMessage(clean, "user");
-          addMessage("Adhi Setup madhun Gemini API key save kar.", "ai");
-          openSetup();
-          return;
-        }
-
-        addMessage(clean, "user");
-        promptInput.value = "";
-        setStatus("SARA vichar kartey...");
-
-        const langMap = {
-          "mr-IN": "Marathi",
-          "hi-IN": "Hindi",
-          "en-IN": "English"
-        };
-        const selectedLang = langMap[langSelect.value] || "Marathi";
-        const systemInstruction =
+    chatForm.onsubmit = (e) => {
+      e.preventDefault();
+      askGemini(promptInput.value);
+    };
+  </script>
+</body>
+</html>
